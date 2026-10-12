@@ -1,0 +1,21 @@
+{
+  "name": "bookly",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bookly: remember the key ideas from the books you read.",
+  "scripts": {
+    "build": "python3 build.py src/retain.html",
+    "android:sync": "npx cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.3",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/core": "8.5.3",
+    "@capacitor/filesystem": "8.1.4",
+    "@capacitor/share": "8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "3.0.5",
+    "@capacitor/cli": "8.5.3"
+  }
+}

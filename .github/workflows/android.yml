@@ -1,0 +1,43 @@
+name: Build Android app
+on:
+  push:
+    branches: [main]
+    paths: ["www/**", "android/**", "package.json", "capacitor.config.json", ".github/workflows/android.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@v3
+      - run: npm install --no-audit --no-fund
+      - run: npx cap sync android
+      - name: Build signed APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
+      - run: cp android/app/build/outputs/apk/release/app-release.apk Bookly.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Bookly-apk
+          path: Bookly.apk
+      - name: Publish as the latest release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Bookly 1.0.${{ github.run_number }}
+          make_latest: true
+          files: Bookly.apk
+          body: |
+            Android app for Bookly. On your phone, download **Bookly.apk** below and open it.
+            Android asks once to allow installs from your browser or Files app. Updates install over the old version and keep your progress.

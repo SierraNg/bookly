@@ -1,0 +1,19 @@
+{
+  "appId": "app.bookly.reader",
+  "appName": "Bookly",
+  "webDir": "www",
+  "backgroundColor": "#141318",
+  "android": {
+    "backgroundColor": "#141318"
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    },
+    "SystemBars": {
+      "insetsHandling": "css",
+      "initialViewportFitValueHint": "cover",
+      "style": "DARK"
+    }
+  }
+}
