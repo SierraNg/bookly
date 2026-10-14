@@ -74,12 +74,16 @@
   function seed(all) {
     return fetch("seed.json", { cache: "no-cache" }).then(function (r) { if (!r.ok) throw new Error("seed"); return r.json(); }).then(function (s) {
       var have = all[SEED_KEY], first = !have, entries = [];
-      if (have && have.version === s.version) return;
+      if (have && have.version === s.version && have.resetId === s.resetId) return;
+      /* A one-time fresh start: clears review progress and old trackers, keeps books, cards and your edits. */
+      if (!first && s.resetId && have.resetId !== s.resetId) {
+        Object.keys(all).forEach(function (p) { if (/^(progress|meta)\//.test(p)) { delete all[p]; entries.push([p, undefined]); } });
+      }
       ["books", "cards", "progress", "meta"].forEach(function (col) {
         if (!first && (col === "progress" || col === "meta")) return;
         Object.keys(s[col] || {}).forEach(function (id) { var p = col + "/" + id; if (first || !(p in all)) { all[p] = s[col][id]; entries.push([p, s[col][id]]); } });
       });
-      entries.push([SEED_KEY, { version: s.version, at: Date.now() }]);
+      entries.push([SEED_KEY, { version: s.version, resetId: s.resetId || null, at: Date.now() }]);
       return writeMany(entries);
     }).catch(function () { if (!Object.keys(all).length) throw new Error("no library"); });
   }
