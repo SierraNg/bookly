@@ -1,0 +1,1009 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#141318">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bookly">
+<meta name="description" content="Remember the key ideas from the books you read.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-32.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<title>Bookly</title>
+<style>
+@font-face { font-family: "Instrument Sans"; font-style: normal; font-weight: 400; font-display: swap; src: url(fonts/instrument-sans-latin-400-normal.woff2) format("woff2"); }
+@font-face { font-family: "Instrument Sans"; font-style: normal; font-weight: 500; font-display: swap; src: url(fonts/instrument-sans-latin-500-normal.woff2) format("woff2"); }
+@font-face { font-family: "Instrument Sans"; font-style: normal; font-weight: 600; font-display: swap; src: url(fonts/instrument-sans-latin-600-normal.woff2) format("woff2"); }
+@font-face { font-family: "Instrument Sans"; font-style: normal; font-weight: 700; font-display: swap; src: url(fonts/instrument-sans-latin-700-normal.woff2) format("woff2"); }
+@font-face { font-family: "Literata"; font-style: normal; font-weight: 400; font-display: swap; src: url(fonts/literata-latin-400-normal.woff2) format("woff2"); }
+@font-face { font-family: "Literata"; font-style: normal; font-weight: 500; font-display: swap; src: url(fonts/literata-latin-500-normal.woff2) format("woff2"); }
+@font-face { font-family: "Literata"; font-style: normal; font-weight: 600; font-display: swap; src: url(fonts/literata-latin-600-normal.woff2) format("woff2"); }
+@font-face { font-family: "Literata"; font-style: italic; font-weight: 400; font-display: swap; src: url(fonts/literata-latin-400-italic.woff2) format("woff2"); }
+html, body { margin: 0; }
+body { overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; }
+/* Layout: one phone-width column with a bottom tab bar; Today is tinted with the current book's palette and motif; review is a full-screen overlay. Single dark look, per the approved Bookly design. */
+:root {
+  --bg: #141318;
+  --raised: #211F26;
+  --nav: #19181D;
+  --line: #2E2C33;
+  --line-strong: #3A3D44;
+  --fg: #ECEAF0;
+  --fg-warm: #F3F1EC;
+  --muted: #A6A3AD;
+  --muted-2: #B9B6C0;
+  --card: #1C3354;
+  --card-line: #2E4568;
+  --card-muted: #B7C3D6;
+  --green: #467D55;
+  --green-text: #8CC79C;
+  --blue: #3F6496;
+  --orange: #A9622F;
+  --red: #B5484A;
+  --tile-new: #3A3D44;
+  --tile-new-fg: #D5D8DD;
+  --display: "Literata", Georgia, "Times New Roman", serif;
+  --ui: "Instrument Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--ui); font-size: 16px; line-height: 1.45; -webkit-font-smoothing: antialiased; transition: background-color 0.3s; }
+* { box-sizing: border-box; }
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--green-text); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+.app { max-width: 520px; margin: 0 auto; min-height: 100%; position: relative; }
+.motif { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.motif svg { width: 100%; height: 100%; max-width: 520px; display: block; margin: 0 auto; }
+.screen { position: relative; z-index: 1; padding-inline: 16px; padding-block: 24px 112px; display: flex; flex-direction: column; gap: 14px; }
+h1.page { margin: 0; font-family: var(--display); font-size: 26px; font-weight: 600; text-wrap: balance; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.num { font-variant-numeric: tabular-nums; }
+.row { display: flex; gap: 10px; align-items: center; }
+.grow { flex: 1; min-width: 0; }
+
+/* Today */
+.today { color: var(--fg-warm); }
+.brandrow { display: flex; justify-content: space-between; align-items: center; }
+.brand { font-family: var(--display); font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+.greet { margin: 0; font-family: var(--display); font-size: 30px; font-weight: 500; line-height: 1.15; letter-spacing: -0.01em; }
+.glass { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.bignum { font-family: var(--display); font-size: 52px; font-weight: 500; line-height: 0.9; }
+.mixbar { display: flex; gap: 3px; height: 10px; }
+.mixbar span { border-radius: 999px; min-width: 6px; }
+.mixlegend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: #DAD7E0; }
+.mixlegend span { display: inline-flex; align-items: center; gap: 6px; }
+.mixlegend i { width: 8px; height: 8px; border-radius: 999px; display: inline-block; }
+.btn-soft { display: flex; justify-content: center; align-items: center; gap: 8px; min-height: 52px; border-radius: 14px; background: var(--soft); color: var(--ink); font-size: 16px; font-weight: 700; border: 0; width: 100%; }
+.week { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.weekgrid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.day { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.dot { width: 30px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.08); }
+.dot.done { background: var(--soft); color: var(--ink); }
+.dot.today { background: transparent; border: 2px dashed var(--soft); }
+.daylabel { font-size: 11px; font-weight: 500; color: var(--muted); }
+.daylabel.today { font-weight: 700; color: var(--soft); }
+.nowcard { display: flex; flex-direction: column; border-radius: 18px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); color: var(--fg-warm); background: none; padding: 0; text-align: left; width: 100%; }
+.nowhead { background: var(--deep); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.nowbody { background: rgba(20,19,24,0.72); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.minitiles { display: grid; gap: 4px; }
+.minitiles span { aspect-ratio: 1; border-radius: 4px; }
+.chip-soft { font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 999px; background: var(--soft); color: var(--ink); white-space: nowrap; }
+.warm { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 18px; border: 1.5px dashed rgba(255,255,255,0.22); color: var(--fg-warm); background: none; width: 100%; text-align: left; }
+.warm .q { font-family: var(--display); font-style: italic; font-size: 15px; line-height: 1.3; }
+.pillbtn { font-size: 13px; font-weight: 700; padding: 8px 12px; border-radius: 999px; background: rgba(255,255,255,0.10); white-space: nowrap; }
+
+/* Shared blocks */
+.panel { background: var(--raised); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.statgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.stat { background: var(--raised); border-radius: 12px; padding: 10px 12px; }
+.stat b { display: block; font-size: 18px; font-weight: 600; }
+.stat span { font-size: 12px; color: var(--muted); }
+.btn { border: 0; border-radius: 14px; min-height: 50px; padding: 0 16px; font-weight: 600; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.btn-green { background: var(--green); color: #fff; }
+.btn-outline { background: transparent; border: 1px solid var(--line-strong); color: var(--fg); }
+.iconbtn { width: 44px; height: 44px; border: 0; background: transparent; color: var(--fg); display: flex; align-items: center; justify-content: center; border-radius: 12px; flex-shrink: 0; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--fg); font-weight: 500; font-size: 13px; }
+.chip[aria-pressed="true"] { background: var(--green); border-color: var(--green); color: #fff; font-weight: 600; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.s-new { background: var(--tile-new); color: var(--tile-new-fg); }
+.s-learning { background: var(--orange); color: #fff; }
+.s-reviewing { background: var(--blue); color: #fff; }
+.s-mastered { background: var(--green); color: #fff; }
+.libbook { border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; background: var(--raised); }
+.libhead { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 14px; border: 0; width: 100%; text-align: left; background: var(--green); color: #fff; }
+.libhead.idle { background: #2A2830; color: var(--fg); }
+.libhead .t { font-size: 15px; font-weight: 700; }
+.libhead .a { font-size: 13px; opacity: 0.9; }
+.darkchip { font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 999px; background: rgba(0,0,0,0.18); white-space: nowrap; }
+.numtiles { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; padding: 10px 12px; }
+.numtiles span { height: 26px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-weight: 600; font-size: 11px; }
+.coming { padding: 10px 14px 12px; font-size: 13px; color: var(--muted); }
+.list { display: flex; flex-direction: column; gap: 6px; }
+details.pt { background: var(--raised); border-radius: 12px; }
+details.pt summary { list-style: none; display: flex; align-items: center; gap: 12px; padding: 8px 12px 8px 8px; min-height: 52px; cursor: pointer; }
+details.pt summary::-webkit-details-marker { display: none; }
+.ptile { width: 36px; height: 36px; flex-shrink: 0; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; }
+.ptcue { flex: 1; min-width: 0; font-family: var(--display); font-size: 15px; line-height: 1.3; }
+.ptnext { font-size: 12px; color: var(--muted); white-space: nowrap; }
+details.pt .body { padding: 0 14px 14px 56px; display: flex; flex-direction: column; gap: 8px; }
+details.pt .body p { margin: 0; font-family: var(--display); line-height: 1.55; font-size: 15px; }
+.also { font-size: 13px; color: var(--card-muted); font-style: italic; }
+.linkbtn { background: none; border: 0; color: var(--green-text); font-weight: 600; padding: 6px 0; text-align: left; font-size: 14px; }
+.cover { width: 64px; height: 90px; border-radius: 6px; background: var(--card); flex-shrink: 0; display: flex; align-items: flex-end; padding: 6px; font-family: var(--display); font-size: 10px; line-height: 1.2; color: var(--card-muted); overflow: hidden; }
+.jrow { display: flex; align-items: center; gap: 12px; background: var(--raised); border-radius: 14px; padding: 12px 14px; color: var(--fg); border: 0; width: 100%; text-align: left; }
+.badge { width: 32px; height: 32px; flex-shrink: 0; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; }
+.bar { height: 6px; background: var(--tile-new); border-radius: 3px; overflow: hidden; }
+.bar span { display: block; height: 100%; background: var(--green); }
+.stack { display: flex; height: 14px; gap: 3px; }
+.stack span { border-radius: 4px; }
+.empty { padding: 28px 20px; border: 1px dashed var(--line); border-radius: 18px; display: flex; flex-direction: column; gap: 10px; }
+.empty h2 { font-family: var(--display); font-size: 20px; margin: 0; font-weight: 600; }
+
+/* Forms */
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label, .lbl { font-size: 13px; color: var(--muted); }
+.field input, .field textarea, .field select { min-height: 46px; border-radius: 12px; border: 1px solid var(--line); background: var(--raised); color: var(--fg); padding: 0 14px; width: 100%; }
+.field textarea { padding: 10px 12px; font-family: var(--display); line-height: 1.45; resize: vertical; min-height: 110px; }
+.ptbox { display: flex; flex-direction: column; gap: 10px; background: var(--raised); border-radius: 16px; padding: 14px; }
+.ptbox .field input, .ptbox .field textarea { background: var(--bg); border-radius: 10px; }
+.tabs2 { display: flex; background: var(--raised); border-radius: 12px; padding: 4px; }
+.tabs2 button { min-height: 36px; padding: 0 12px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font-weight: 500; font-size: 14px; }
+.tabs2 button[aria-selected="true"] { background: var(--green); color: #fff; font-weight: 600; }
+.radio { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 15px; }
+.radio input { width: 20px; height: 20px; accent-color: var(--green); }
+.dashedbtn { min-height: 44px; border-radius: 10px; border: 1px dashed var(--line-strong); background: transparent; color: var(--fg); font-weight: 500; font-size: 14px; }
+.seg { display: flex; background: var(--bg); border-radius: 12px; padding: 4px; gap: 4px; }
+.seg button { flex: 1; border: 0; background: transparent; border-radius: 9px; min-height: 38px; color: var(--muted); font-weight: 600; font-size: 14px; }
+.seg button[aria-pressed="true"] { background: var(--green); color: #fff; }
+
+/* Nav */
+nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; background: var(--nav); border-top: 1px solid var(--line); padding: 8px 0 calc(20px + env(safe-area-inset-bottom, 0px)); transition: background-color 0.3s; }
+nav.tabs.tinted { background: rgba(20,19,24,0.88); border-top-color: rgba(255,255,255,0.08); }
+nav.tabs .inner { max-width: 520px; margin: 0 auto; display: flex; justify-content: space-around; }
+nav.tabs button { background: none; border: 0; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; min-width: 64px; min-height: 44px; }
+nav.tabs button[aria-current="page"] { color: var(--active, var(--green-text)); font-weight: 600; }
+nav.tabs svg { width: 24px; height: 24px; }
+
+/* Review */
+.review { position: fixed; inset: 0; background: var(--bg); z-index: 10; display: flex; }
+.review .wrap { max-width: 520px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; padding-inline: 16px; padding-block: calc(20px + env(safe-area-inset-top, 0px)) calc(28px + env(safe-area-inset-bottom, 0px)); min-height: 0; }
+.rvtop { display: flex; align-items: center; gap: 12px; }
+.rvtop .iconbtn { color: var(--muted); }
+.prog { flex: 1; height: 6px; background: #2A2830; border-radius: 3px; overflow: hidden; }
+.prog span { display: block; height: 100%; background: var(--green); transition: width 0.25s; }
+.pill { font-size: 13px; padding: 6px 12px; border-radius: 999px; background: var(--raised); color: var(--fg); }
+.kind { font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 999px; color: #fff; }
+.kind.rev { background: var(--blue); }
+.kind.new { background: var(--green); }
+.flash { flex: 1; min-height: 0; background: var(--card); border-radius: 24px; padding: 28px 24px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; color: var(--fg); border: 0; text-align: left; width: 100%; }
+.flash.prompt { justify-content: center; }
+.flash .eyebrow { color: var(--card-muted); font-size: 13px; font-weight: 600; }
+.cue { margin: 0; font-family: var(--display); font-size: 26px; line-height: 1.35; font-weight: 500; text-wrap: balance; }
+.revealed { padding: 24px; gap: 18px; }
+.cuesmall { font-family: var(--display); font-size: 16px; line-height: 1.4; color: var(--card-muted); margin: 0; }
+.divider { height: 1px; background: var(--card-line); flex-shrink: 0; }
+.point { margin: 0; font-family: var(--display); font-size: 20px; line-height: 1.55; }
+.cardfoot { margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; color: var(--card-muted); }
+.cardfoot .iconbtn { color: var(--card-muted); }
+.cardfoot .iconbtn[aria-pressed="true"] { color: #F1E4C0; }
+.showbtn { display: flex; justify-content: center; align-items: center; min-height: 56px; border-radius: 16px; border: 1px solid var(--line-strong); color: var(--fg); font-size: 16px; font-weight: 600; background: none; width: 100%; }
+.left { display: flex; justify-content: center; font-size: 13px; color: var(--muted); }
+.grades { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.grade { border: 0; border-radius: 16px; min-height: 68px; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.grade b { font-size: 17px; }
+.grade span { font-size: 13px; font-weight: 500; }
+.grade.forgot { background: var(--red); }
+.grade.rem { background: var(--green); }
+.btn-next { border: 0; border-radius: 16px; min-height: 68px; width: 100%; background: var(--green); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.btn-next b { font-size: 17px; }
+.btn-next span { font-size: 13px; opacity: 0.9; }
+.done { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 16px; }
+
+.sheet-bg { position: fixed; inset: 0; background: rgba(5,5,8,0.6); z-index: 20; display: flex; align-items: flex-end; justify-content: center; }
+.sheet { background: var(--nav); border-radius: 22px 22px 0 0; width: 100%; max-width: 520px; padding-inline: 16px; padding-block: 18px calc(20px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 12px; max-height: 92%; overflow-y: auto; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-weight: 600; font-size: 14px; z-index: 30; max-width: calc(100% - 32px); }
+.screen { padding-top: calc(24px + env(safe-area-inset-top, 0px)); }
+.brandmark { display: flex; align-items: center; gap: 10px; }
+.brandmark img { width: 34px; height: 27px; display: block; }
+</style>
+</head>
+<body>
+
+<div class="motif" id="motif" aria-hidden="true"></div>
+<div class="app">
+  <main class="screen" id="screen"><div class="empty"><h2>Loading your library</h2><p class="muted">Your books and points are on their way.</p></div></main>
+</div>
+<nav class="tabs" id="nav" aria-label="Main">
+  <div class="inner">
+    <button data-tab="today" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M7 3.5h10"/></svg>Today</button>
+    <button data-tab="library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="4" height="16" rx="1"/><rect x="9" y="4" width="4" height="16" rx="1"/><path d="M15 6.5l3.3-1 3.4 13.4-3.3 1z"/></svg>Library</button>
+    <button data-tab="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20v-8M11 20V5M17 20v-5M3 20h18"/></svg>Progress</button>
+    <button data-tab="add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Add</button>
+  </div>
+</nav>
+<div id="overlay"></div>
+
+<script src="localdb.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- FSRS-6 scheduler (default parameters, 90% target retention) ---------- */
+  var W = [0.212, 1.2931, 2.3065, 8.2956, 6.4133, 0.8334, 3.0194, 0.001, 1.8722, 0.1666, 0.796, 1.4835, 0.0614, 0.2629, 1.6483, 0.6014, 1.8729, 0.5425, 0.0912, 0.0658, 0.1542];
+  var DECAY = -W[20], FACTOR = Math.pow(0.9, 1 / DECAY) - 1, RETENTION = 0.9;
+  var DAY = 86400000, MASTERED_DAYS = 21;
+  function clamp(x, a, b) { return Math.min(b, Math.max(a, x)); }
+  function retrievability(t, s) { return Math.pow(1 + FACTOR * t / s, DECAY); }
+  function intervalDays(s) { return (s / FACTOR) * (Math.pow(RETENTION, 1 / DECAY) - 1); }
+  function initD(g) { return clamp(W[4] - Math.exp(W[5] * (g - 1)) + 1, 1, 10); }
+  function nextD(d, g) { var dp = d + (-W[6] * (g - 3)) * (10 - d) / 9; dp = W[7] * initD(4) + (1 - W[7]) * dp; return clamp(dp, 1, 10); }
+  function sSuccess(d, s, r) { return s * (Math.exp(W[8]) * (11 - d) * Math.pow(s, -W[9]) * (Math.exp(W[10] * (1 - r)) - 1) + 1); }
+  function sFail(d, s, r) { var sf = W[11] * Math.pow(d, -W[12]) * (Math.pow(s + 1, W[13]) - 1) * Math.exp(W[14] * (1 - r)); return Math.min(sf, s / Math.exp(W[17] * W[18])); }
+  function sShort(s, g) { var inc = Math.exp(W[17] * (g - 3 + W[18])) * Math.pow(s, -W[19]); if (g >= 3) inc = Math.max(inc, 1); return s * inc; }
+  /* Steps for a point that is still being learned, Hanly style: seen once, then 2 min, 10 min, then days. */
+  var MIN = 60000, LEARN_STEPS = [2 * MIN, 10 * MIN], RELEARN_STEP = 10 * MIN, DAY_START_H = 4;
+  /* Day intervals land at 4:00 on the target day, so "tomorrow" means it's waiting when you wake up. */
+  function dayStart(ms, add) { var d = new Date(ms - DAY_START_H * 3600000); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + (add || 0)); return d.getTime() + DAY_START_H * 3600000; }
+  /* Small fixed spread on longer intervals so cards learned together don't stay bunched. Fixed per card and review, so the button label always matches what happens. */
+  function spread(id, reps, days) {
+    if (days < 3) return days;
+    var h = 0, k = String(id) + ":" + reps; for (var i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) | 0;
+    var f = ((Math.abs(h) % 1000) / 1000) * 0.1 - 0.05;
+    return Math.max(1, Math.round(days * (1 + f)));
+  }
+  function fsrsDays(s) { return clamp(Math.round(intervalDays(s)), 1, 3650); }
+  /* First sighting of a new point: shown, not tested. Tested 2 minutes later. */
+  function introduce(now) { return { phase: "learning", step: 0, s: null, d: null, last: now, due: now + LEARN_STEPS[0], ivl: 0, reps: 0, lapses: 0, seen: now }; }
+  /* grade: 1 = Forgot, 3 = Remembered. Returns the next state; the same function drives the button labels. */
+  function schedule(p, g, now, id) {
+    var s, d;
+    if (p.s == null) { s = W[g - 1]; d = initD(g); }
+    else {
+      var t = Math.max(0, (now - p.last) / DAY);
+      d = nextD(p.d, g);
+      s = t < 1 ? sShort(p.s, g) : g === 3 ? sSuccess(p.d, p.s, retrievability(t, p.s)) : sFail(p.d, p.s, retrievability(t, p.s));
+    }
+    s = clamp(s, 0.01, 36500);
+    var n = { s: s, d: d, last: now, reps: (p.reps || 0) + 1, lapses: p.lapses || 0, seen: p.seen || now };
+    if (p.phase === "learning") {
+      if (g === 1) return Object.assign(n, { phase: "learning", step: 0, due: now + LEARN_STEPS[0], ivl: 0 });
+      var st = (p.step || 0) + 1;
+      if (st < LEARN_STEPS.length) return Object.assign(n, { phase: "learning", step: st, due: now + LEARN_STEPS[st], ivl: 0 });
+      return Object.assign(n, { phase: "review", step: 0, ivl: 1, due: dayStart(now, 1) });
+    }
+    if (p.phase === "relearning") {
+      if (g === 1) return Object.assign(n, { phase: "relearning", step: 0, due: now + RELEARN_STEP, ivl: 0 });
+      var r = spread(id, n.reps, fsrsDays(s));
+      return Object.assign(n, { phase: "review", step: 0, ivl: r, due: dayStart(now, r) });
+    }
+    if (g === 1) return Object.assign(n, { phase: "relearning", step: 0, lapses: n.lapses + 1, due: now + RELEARN_STEP, ivl: 0 });
+    /* Grow steadily: at least one day more than last time, at most 2.5 times as long. */
+    var prev = p.ivl || 1, iv = spread(id, n.reps, clamp(fsrsDays(s), prev + 1, Math.ceil(prev * 2.5)));
+    return Object.assign(n, { phase: "review", step: 0, ivl: iv, due: dayStart(now, iv) });
+  }
+  /* "in 2 min", "in 10 min", "tomorrow", "in 4 days" */
+  function whenLabel(due, now) {
+    var ms = due - now;
+    if (ms <= 30000) return "now";
+    if (ms < 55 * MIN) return "in " + Math.max(1, Math.round(ms / MIN)) + " min";
+    var days = Math.round((dayStart(due, 0) - dayStart(now, 0)) / DAY);
+    if (days <= 0) return ms < 90 * MIN ? "in 1 hour" : "in " + Math.round(ms / 3600000) + " hours";
+    if (days === 1) return "tomorrow";
+    if (days < 31) return "in " + days + " days";
+    if (days < 365) { var mo = Math.round(days / 30.4); return "in " + mo + (mo === 1 ? " month" : " months"); }
+    var y = Math.round(days / 36.5) / 10; return "in " + y + (y === 1 ? " year" : " years");
+  }
+
+  /* ---------- Book themes (from the approved design) ---------- */
+  var PALETTES = [
+    { ground: "#132E2F", deep: "#1E4D4F", accent: "#3E8A86", soft: "#CFE6E3", ink: "#10302F" },
+    { ground: "#26172A", deep: "#4A2A45", accent: "#8A4F7D", soft: "#EBD3E4", ink: "#331C2F" },
+    { ground: "#2A1811", deep: "#5A2E1F", accent: "#B5623E", soft: "#F3D8CB", ink: "#3D1E13" },
+    { ground: "#171A36", deep: "#252B57", accent: "#5560A8", soft: "#D8DBF2", ink: "#1B1F42" },
+    { ground: "#272010", deep: "#4F3F16", accent: "#A8852C", soft: "#F1E4C0", ink: "#352A0D" },
+    { ground: "#2A1620", deep: "#55283A", accent: "#A85770", soft: "#F2D3DD", ink: "#3A1A27" },
+    { ground: "#1A2414", deep: "#2F4123", accent: "#6E8A45", soft: "#DDE8CF", ink: "#1F2C17" },
+    { ground: "#132231", deep: "#1F3A52", accent: "#4A7BA3", soft: "#D3E2EE", ink: "#142839" },
+    { ground: "#241C18", deep: "#4A372D", accent: "#9A7462", soft: "#EEDFD6", ink: "#33251E" },
+    { ground: "#10261E", deep: "#163F33", accent: "#3F8A6C", soft: "#CDE8DC", ink: "#0F2C23" }
+  ];
+  function bookNo(b) { return Math.max(1, Math.round((b && b.order) || 1)); }
+  function pal(b) { var n = bookNo(b); return PALETTES[(n * 7 + 3) % PALETTES.length]; }
+  function motifSvg(c, kind) {
+    var o = '<svg viewBox="0 0 390 844" preserveAspectRatio="xMidYMin slice">';
+    if (kind === "orbs") o += '<circle cx="340" cy="70" r="170" fill="' + c.accent + '" fill-opacity="0.42"/><circle cx="250" cy="200" r="64" fill="' + c.soft + '" fill-opacity="0.10"/><circle cx="20" cy="560" r="130" fill="' + c.deep + '" fill-opacity="0.95"/><circle cx="330" cy="640" r="80" fill="none" stroke="' + c.soft + '" stroke-opacity="0.16" stroke-width="2"/><circle cx="330" cy="640" r="52" fill="none" stroke="' + c.soft + '" stroke-opacity="0.10" stroke-width="2"/><circle cx="60" cy="300" r="4" fill="' + c.soft + '" fill-opacity="0.35"/><circle cx="84" cy="318" r="3" fill="' + c.soft + '" fill-opacity="0.25"/><circle cx="52" cy="336" r="2" fill="' + c.soft + '" fill-opacity="0.25"/>';
+    else if (kind === "arcs") o += '<circle cx="390" cy="0" r="110" fill="' + c.accent + '" fill-opacity="0.50"/><circle cx="390" cy="0" r="170" fill="none" stroke="' + c.accent + '" stroke-opacity="0.32" stroke-width="30"/><circle cx="390" cy="0" r="240" fill="none" stroke="' + c.accent + '" stroke-opacity="0.18" stroke-width="30"/><circle cx="390" cy="0" r="310" fill="none" stroke="' + c.soft + '" stroke-opacity="0.08" stroke-width="2"/><circle cx="0" cy="760" r="150" fill="' + c.deep + '" fill-opacity="0.95"/><circle cx="0" cy="760" r="210" fill="none" stroke="' + c.deep + '" stroke-opacity="0.6" stroke-width="22"/>';
+    else o += '<rect x="250" y="-40" width="150" height="210" rx="14" fill="' + c.accent + '" fill-opacity="0.45" transform="rotate(16 325 65)"/><rect x="210" y="10" width="130" height="180" rx="12" fill="none" stroke="' + c.soft + '" stroke-opacity="0.18" stroke-width="2" transform="rotate(-8 275 100)"/><rect x="-50" y="470" width="170" height="230" rx="16" fill="' + c.deep + '" fill-opacity="0.95" transform="rotate(-12 35 585)"/><rect x="290" y="600" width="18" height="120" rx="4" fill="' + c.accent + '" fill-opacity="0.28" transform="rotate(10 299 660)"/><rect x="318" y="610" width="18" height="110" rx="4" fill="' + c.soft + '" fill-opacity="0.12" transform="rotate(10 327 665)"/><rect x="346" y="596" width="18" height="128" rx="4" fill="' + c.accent + '" fill-opacity="0.18" transform="rotate(10 355 660)"/>';
+    return o + "</svg>";
+  }
+
+  /* ---------- State ---------- */
+  var S = {
+    db: null, ready: false, offline: false,
+    books: {}, cards: {}, progress: {},
+    settings: {},
+    tab: "today", openBook: null, addMode: "book", addPoints: [{}], addFor: null,
+    libFilter: "all", search: null,
+    loaded: { books: false, cards: false, progress: false }
+  };
+  var session = null;
+
+  function dayKey(ms) { var d = new Date(ms - 4 * 3600000); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function slug(s) { return String(s).toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "book"; }
+  function normTxt(s) { return " " + String(s || "").toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9]+/g, " ").trim(); }
+  function plural(n, w) { return n + " " + w + (n === 1 ? "" : "s"); }
+
+  function booksSorted() { return Object.values(S.books).sort(function (a, b) { return (a.order || 999) - (b.order || 999) || String(a.title).localeCompare(b.title); }); }
+  function cardsOf(id) { return Object.values(S.cards).filter(function (c) { return c.bookId === id; }).sort(function (a, b) { return a.n - b.n; }); }
+  function status(id) { var p = S.progress[id]; if (!p) return "new"; if (p.phase !== "review") return "learning"; return (p.ivl || 0) >= MASTERED_DAYS ? "mastered" : "reviewing"; }
+  function bookState(b) {
+    var cs = cardsOf(b.id);
+    if (!cs.length) return { key: "coming", label: "Cards coming", cs: cs, st: [] };
+    var st = cs.map(function (c) { return status(c.id); });
+    var nNew = st.filter(function (x) { return x === "new"; }).length, nM = st.filter(function (x) { return x === "mastered"; }).length;
+    if (nNew === cs.length) return { key: "queued", label: "Queued", cs: cs, st: st, nNew: nNew, nM: nM };
+    if (nM === cs.length) return { key: "mastered", label: "Mastered", cs: cs, st: st, nNew: nNew, nM: nM };
+    if (nNew > 0) return { key: "learning", label: (cs.length - nNew) + " / " + cs.length + " introduced", cs: cs, st: st, nNew: nNew, nM: nM };
+    return { key: "reviewing", label: "Reviewing", cs: cs, st: st, nNew: nNew, nM: nM };
+  }
+  function newQueue() { var out = []; booksSorted().forEach(function (b) { cardsOf(b.id).forEach(function (c) { if (!S.progress[c.id]) out.push(c); }); }); return out; }
+  /* Introduced cards whose review time has come, oldest first. Nothing else counts as "to review". */
+  function dueQueue(now, bookId) {
+    return Object.keys(S.progress).filter(function (id) { var c = S.cards[id]; return c && S.progress[id].due <= now && (!bookId || c.bookId === bookId); })
+      .sort(function (a, b) { return S.progress[a].due - S.progress[b].due; }).map(function (id) { return S.cards[id]; });
+  }
+  function nextDueAt(bookId) {
+    return Object.keys(S.progress).reduce(function (m, id) { var c = S.cards[id]; return c && (!bookId || c.bookId === bookId) ? Math.min(m, S.progress[id].due) : m; }, Infinity);
+  }
+  function currentBook() {
+    var q = newQueue(); if (q.length) return S.books[q[0].bookId];
+    var started = booksSorted().filter(function (b) { var k = bookState(b).key; return k === "reviewing" || k === "learning"; });
+    return started.length ? started[started.length - 1] : null;
+  }
+  function warmupCard(cb) {
+    var now = Date.now(), best = null, bestR = 2;
+    Object.keys(S.progress).forEach(function (id) {
+      var p = S.progress[id], c = S.cards[id];
+      if (!c || p.phase !== "review" || p.due <= now || (cb && c.bookId === cb.id)) return;
+      var r = retrievability((now - p.last) / DAY, p.s);
+      if (r < bestR) { bestR = r; best = c; }
+    });
+    return best;
+  }
+
+  /* ---------- Rendering ---------- */
+  var screen = document.getElementById("screen"), overlay = document.getElementById("overlay"), nav = document.getElementById("nav"), motif = document.getElementById("motif");
+  var ICON = {
+    arrow: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+    flame: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2.2 1-3.6 2-4.6.3 1.6 1.2 2.6 2.2 2.6C11 8 11 5.5 12 3z"/></svg>',
+    check: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    close: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    back: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
+    dots: '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>',
+    search: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>',
+    star: '<svg width="20" height="20" viewBox="0 0 24 24" fill="FILL" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/></svg>',
+    pen: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>'
+  };
+
+  function setTheme(c, kind) {
+    if (c) {
+      document.body.style.background = c.ground;
+      motif.innerHTML = motifSvg(c, kind);
+      nav.classList.add("tinted"); nav.style.setProperty("--active", c.soft);
+    } else {
+      document.body.style.background = "";
+      motif.innerHTML = "";
+      nav.classList.remove("tinted"); nav.style.removeProperty("--active");
+    }
+  }
+
+  function renderToday() {
+    var cb = currentBook(), c = cb ? pal(cb) : PALETTES[0];
+    var kinds = ["orbs", "arcs", "pages"];
+    setTheme(c, kinds[(cb ? bookNo(cb) : 1) % 3]);
+    var vars = "--soft:" + c.soft + ";--ink:" + c.ink + ";--deep:" + c.deep + ";--accent:" + c.accent;
+    var now = Date.now(), q = dueQueue(now), fresh = newQueue().length;
+    var h = '<div class="today" style="' + vars + ';display:flex;flex-direction:column;gap:14px">';
+    h += '<header class="brandrow"><h1 class="brand brandmark" style="margin:0"><img src="icons/mark.svg" alt="">Bookly</h1></header>' + installBanner();
+
+    h += '<section class="glass" aria-label="Review">';
+    h += '<div style="display:flex;align-items:flex-end;gap:12px"><div class="bignum num" id="duecount">' + q.length + '</div><div style="display:flex;flex-direction:column;gap:2px;padding-bottom:2px"><div style="font-size:15px;font-weight:600">' + (q.length === 1 ? "card" : "cards") + ' to review</div>';
+    if (q.length) {
+      h += "</div></div>";
+      var byBook = {}; q.forEach(function (x) { byBook[x.bookId] = (byBook[x.bookId] || 0) + 1; });
+      var mix = Object.keys(byBook).map(function (id) { return { b: S.books[id], n: byBook[id] }; }).sort(function (a, b) { return bookNo(a.b) - bookNo(b.b); });
+      h += '<div style="display:flex;flex-direction:column;gap:8px"><div class="mixbar">' + mix.map(function (m) { return '<span style="flex:' + m.n + ' 1 0;background:' + pal(m.b).accent + '"></span>'; }).join("") + '</div><div class="mixlegend">' + mix.slice(0, 5).map(function (m) { return '<span><i style="background:' + pal(m.b).accent + '"></i>Book ' + bookNo(m.b) + " · " + m.n + "</span>"; }).join("") + "</div></div>";
+      h += '<button class="btn-soft" data-act="start">Start review' + ICON.arrow + "</button>";
+    } else {
+      var nd = nextDueAt();
+      h += '<div class="small" style="color:var(--soft)">' + (isFinite(nd) ? "next one " + esc(whenLabel(nd, now)) : fresh ? "nothing introduced yet" : "all caught up") + "</div></div></div>";
+      if (fresh) h += '<button class="btn-soft" data-act="start">Learn new points' + ICON.arrow + "</button>";
+    }
+    h += "</section>";
+
+    if (cb) {
+      var bs = bookState(cb), cols = Math.max(8, Math.min(20, bs.cs.length || 10));
+      var tileBg = { mastered: "#467D55", reviewing: "#3F6496", learning: "#A9622F", new: "rgba(255,255,255,0.14)" };
+      h += '<button class="nowcard" data-book="' + esc(cb.id) + '"><div class="nowhead"><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><div style="font-size:15px;font-weight:700;color:#fff">Book ' + bookNo(cb) + ": " + esc(cb.title) + '</div><div class="small" style="color:var(--soft)">' + esc(cb.author || "") + '</div></div><span class="chip-soft">Now learning</span></div>' +
+        '<div class="nowbody">' + (bs.cs.length ? '<div class="minitiles" style="grid-template-columns:repeat(' + cols + ',minmax(0,1fr))">' + bs.st.map(function (s) { return '<span style="background:' + tileBg[s] + '"></span>'; }).join("") + "</div>" : "") +
+        '<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted-2)"><div>' + (bs.cs.length - (bs.nNew || 0)) + " of " + bs.cs.length + ' points introduced</div><div style="font-weight:600;color:var(--soft)">' + (bs.nM || 0) + " mastered</div></div></div></button>";
+    }
+
+    var wc = warmupCard(cb);
+    if (wc) {
+      var wb = S.books[wc.bookId];
+      h += '<button class="warm" data-act="warmup" data-card="' + esc(wc.id) + '"><div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0"><div class="eyebrow" style="color:var(--soft)">Warm-up · Book ' + bookNo(wb) + '</div><div class="q">' + esc(wc.cue) + '</div></div><span class="pillbtn">Try it</span></button>';
+    }
+    return h + "</div>";
+  }
+
+  function legend() { return '<div class="legend"><span><i class="s-new"></i>New</span><span><i class="s-learning"></i>Learning</span><span><i class="s-reviewing"></i>Reviewing</span><span><i class="s-mastered"></i>Mastered</span></div>'; }
+  function libBook(b) {
+    var st = bookState(b), idle = st.key === "queued" || st.key === "coming";
+    return '<section class="libbook"><button class="libhead' + (idle ? " idle" : "") + '" data-book="' + esc(b.id) + '"><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><div class="t">Book ' + bookNo(b) + ": " + esc(b.title) + '</div><div class="a">' + esc(b.author || "") + '</div></div><span class="darkchip">' + esc(st.label) + "</span></button>" +
+      (st.cs.length ? '<div class="numtiles">' + st.cs.map(function (c, i) { return '<span class="s-' + st.st[i] + '" role="img" aria-label="Point ' + c.n + ", " + st.st[i] + '">' + c.n + "</span>"; }).join("") + "</div>" : "") + "</section>";
+  }
+  function renderLibrary() {
+    setTheme(null);
+    var bs = booksSorted(), groups = { all: bs, learning: [], mastered: [], queued: [], coming: [] };
+    bs.forEach(function (b) { var k = bookState(b).key; if (k === "learning" || k === "reviewing") groups.learning.push(b); else if (k === "mastered") groups.mastered.push(b); else if (k === "coming") groups.coming.push(b); else groups.queued.push(b); });
+    var h = '<header class="brandrow"><h1 class="page">Library</h1><span class="small muted num">' + plural(bs.length, "book") + "</span></header>";
+    var raw = (S.search || "").trim();
+    h += '<div class="field" role="search"><label for="q">Find a book, author or idea</label><input id="q" type="search" autocomplete="off" value="' + esc(S.search || "") + '" placeholder="e.g. Deep Work, Kahneman, anchoring"></div>';
+    if (raw) {
+      var toks = normTxt(raw).split(" ").filter(Boolean);
+      var bookHits = bs.filter(function (b) { var hay = normTxt(b.title + " " + (b.author || "")); return toks.every(function (t) { return hay.indexOf(t) >= 0; }); })
+        .sort(function (a, b) { return (normTxt(a.title).indexOf(" " + toks[0]) === 0 ? 0 : 1) - (normTxt(b.title).indexOf(" " + toks[0]) === 0 ? 0 : 1); }).slice(0, 8);
+      var cb0 = currentBook();
+      h += '<div class="eyebrow muted" style="padding:4px 4px 0">Books</div>';
+      if (bookHits.length) {
+        h += '<div class="list" style="gap:8px">' + bookHits.map(function (b) {
+          var st = bookState(b), isCur = cb0 && cb0.id === b.id;
+          var act = isCur ? '<span class="chip-soft" style="background:var(--green);color:#fff">Now learning</span>' : '<button class="pillbtn" data-act="learnnow" data-book="' + esc(b.id) + '" style="background:var(--green);color:#fff;border:0">' + (st.key === "coming" ? "Learn next" : st.key === "queued" || st.key === "learning" ? "Learn now" : "Review") + "</button>";
+          return '<div class="jrow" style="padding:10px 12px"><button data-book="' + esc(b.id) + '" style="all:unset;cursor:pointer;flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-family:var(--display);font-size:15px">Book ' + bookNo(b) + ": " + esc(b.title) + '</span><span class="small muted">' + esc(b.author || "") + " · " + esc(st.label) + "</span></button>" + act + "</div>";
+        }).join("") + "</div>";
+        h += '<button class="linkbtn" data-act="addfromsearch">Not the one? Add “' + esc(raw) + '” as a new book</button>';
+      } else {
+        h += '<div class="empty" style="padding:18px"><p style="margin:0">“' + esc(raw) + '” isn\'t in your library yet.</p><button class="btn btn-green" data-act="addfromsearch">Add it as a new book</button></div>';
+      }
+      var term = raw.toLowerCase();
+      var hits = term.length > 2 ? Object.values(S.cards).filter(function (c) { return (c.cue + " " + c.point).toLowerCase().indexOf(term) >= 0; }).slice(0, 20) : [];
+      if (hits.length) h += '<div class="eyebrow muted" style="padding:8px 4px 0">Points that mention it</div><div class="list">' + hits.map(function (c) { var b = S.books[c.bookId] || {}; return '<button class="jrow" data-book="' + esc(c.bookId) + '"><span class="ptile s-' + status(c.id) + '">' + c.n + '</span><span class="grow"><span style="display:block;font-family:var(--display)">' + esc(c.cue) + '</span><span class="small muted">' + esc(b.title || "") + "</span></span></button>"; }).join("") + "</div>";
+      return h;
+    }
+    h += '<div class="chips" role="group" aria-label="Filter books">' + [["all", "All"], ["learning", "Learning"], ["mastered", "Mastered"], ["queued", "Queued"], ["coming", "Cards coming"]].map(function (f) {
+      return '<button class="chip" data-act="filter" data-f="' + f[0] + '" aria-pressed="' + (S.libFilter === f[0]) + '">' + f[1] + " " + groups[f[0]].length + "</button>";
+    }).join("") + "</div>" + legend();
+    var shown = groups[S.libFilter] || bs;
+    h += '<div class="list" style="gap:14px">' + (shown.length ? shown.map(libBook).join("") : '<p class="muted">No books here yet.</p>') + "</div>";
+    return h;
+  }
+
+  function renderBook(id) {
+    setTheme(null);
+    var b = S.books[id]; if (!b) { S.openBook = null; return renderLibrary(); }
+    var st = bookState(b), cs = st.cs, cb = currentBook();
+    var counts = { new: 0, learning: 0, reviewing: 0, mastered: 0 }; cs.forEach(function (c) { counts[status(c.id)]++; });
+    var tag = cb && cb.id === b.id ? "now learning" : st.key === "coming" ? "cards coming" : st.label.toLowerCase();
+    var nowB = Date.now();
+    function nextTxt(id) { var p = S.progress[id]; if (!p) return "not yet seen"; return p.due <= nowB ? "review now" : "next " + whenLabel(p.due, nowB); }
+    var h = '<header class="brandrow"><button class="iconbtn" data-act="back" aria-label="Back to library">' + ICON.back + '</button><button class="iconbtn" data-act="bookmenu" data-book="' + esc(b.id) + '" aria-label="Book options">' + ICON.dots + "</button></header>" +
+      '<div class="row" style="gap:14px"><div class="cover">' + esc(b.title) + '</div><div style="display:flex;flex-direction:column;gap:4px;min-width:0"><div class="eyebrow" style="color:var(--green-text)">Book ' + bookNo(b) + " · " + esc(tag) + '</div><h1 class="page" style="font-size:22px;line-height:1.2">' + esc(b.title) + '</h1><div class="muted" style="font-size:14px">' + esc(b.author || "") + "</div></div></div>" +
+      '<div class="statgrid num"><div class="stat"><b>' + (cs.length - counts.new) + " / " + cs.length + '</b><span>introduced</span></div><div class="stat"><b>' + (counts.reviewing + counts.learning) + '</b><span>reviewing</span></div><div class="stat"><b style="color:var(--green-text)">' + counts.mastered + "</b><span>mastered</span></div></div>";
+    h += '<div class="list">' + (cs.length ? cs.map(function (c) {
+      var s = status(c.id);
+      return '<details class="pt"><summary><span class="ptile s-' + s + '">' + c.n + '</span><span class="ptcue">' + esc(c.cue) + '</span><span class="ptnext">' + esc(nextTxt(c.id)) + "</span></summary>" +
+        '<div class="body"><p>' + esc(c.point) + "</p>" + (c.also ? '<div class="also" style="color:var(--muted)">Also in ' + esc(c.also) + "</div>" : "") + '<button class="linkbtn" data-act="edit" data-card="' + esc(c.id) + '">Edit this point</button></div></details>';
+    }).join("") : '<div class="empty"><h2>No points yet</h2><p class="muted">Points for this book are still being written. You can add your own now.</p></div>') + "</div>";
+    var canReview = cs.some(function (c) { return S.progress[c.id]; });
+    h += '<div class="row" style="padding-top:4px"><button class="btn btn-outline grow" data-act="addpoint" data-book="' + esc(b.id) + '">+ Add a point</button>' +
+      (canReview ? '<button class="btn btn-green grow" data-act="reviewbook" data-book="' + esc(b.id) + '">Review this book</button>' : cs.length ? '<button class="btn btn-green grow" data-act="learnnext" data-book="' + esc(b.id) + '">Learn this next</button>' : "") + "</div>";
+    return h;
+  }
+
+  function renderProgress() {
+    setTheme(null);
+    var lib = booksSorted(), bs = lib.filter(function (b) { return cardsOf(b.id).length > 0; }), waiting = lib.length - bs.length;
+    var all = Object.values(S.cards), mastered = all.filter(function (c) { return status(c.id) === "mastered"; }).length;
+    var bc = { mastered: 0, reviewing: 0, learning: 0, queued: 0 };
+    bs.forEach(function (b) { bc[bookState(b).key]++; });
+    var color = { mastered: "#467D55", reviewing: "#3F6496", learning: "#A9622F", queued: "#3A3D44" };
+    var h = '<h1 class="page">Your journey</h1><section class="panel"><div class="brandrow" style="align-items:baseline"><div class="eyebrow muted">' + plural(bs.length, "book") + ' with cards</div><div class="small num" style="color:var(--green-text)">' + plural(mastered, "point") + " mastered</div></div>" +
+      '<div class="stack">' + ["mastered", "reviewing", "learning", "queued"].map(function (k) { return bc[k] ? '<span style="flex:' + bc[k] + ";background:" + color[k] + '"></span>' : ""; }).join("") + "</div>" +
+      '<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px" class="num">' + [["mastered", "Mastered"], ["reviewing", "Reviewing"], ["learning", "Learning"], ["queued", "Queued"]].map(function (x) { return '<div><div style="font-size:20px;font-weight:600">' + bc[x[0]] + '</div><div class="small muted" style="font-size:12px">' + x[1] + "</div></div>"; }).join("") + "</div></section>";
+    h += '<div class="eyebrow muted" style="padding:4px 4px 0">Books</div><div class="list" style="gap:8px">' + bs.map(function (b) {
+      var st = bookState(b), n = st.cs.length, pct = n ? Math.round((st.nM || 0) / n * 100) : 0;
+      var k = st.key;
+      var label = { mastered: "Mastered", reviewing: "Reviewing", learning: "Learning", queued: "Queued" }[k] + (pct > 0 && pct < 100 ? " · " + pct + "% mastered" : "");
+      return '<button class="jrow" data-book="' + esc(b.id) + '"><span class="badge num" style="background:' + color[k] + ";color:" + (k === "queued" ? "#D5D8DD" : "#fff") + '">' + bookNo(b) + '</span><span class="grow" style="display:flex;flex-direction:column;gap:6px"><span style="display:flex;justify-content:space-between;gap:8px"><span style="font-family:var(--display);font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(b.title) + '</span><span class="small muted" style="font-size:12px;white-space:nowrap">' + esc(label) + '</span></span><span class="bar"><span style="width:' + pct + '%"></span></span></span></button>';
+    }).join("") + "</div>";
+    if (waiting) h += '<button class="jrow" data-act="showcoming"><span class="grow small muted">' + plural(waiting, "more book") + " in your library " + (waiting === 1 ? "is" : "are") + ' waiting for cards</span><span class="small" style="color:var(--green-text);font-weight:600;white-space:nowrap">See list</span></button>';
+    h += '<p class="small muted" style="padding:0 4px;margin:0;font-size:12px">A point is mastered once its next review is more than ' + MASTERED_DAYS + " days away. A book is mastered when all its points are.</p>";
+    var last = S.sync && S.sync.at ? "Last synced " + new Date(S.sync.at).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "Not synced yet";
+    h += '<section class="panel"><div class="row" style="gap:12px"><span class="grow" style="display:flex;flex-direction:column;gap:2px;min-width:0"><span class="small" style="font-weight:600">Google Sheet</span><span class="small muted" style="font-size:12px">' + esc(last) + '</span></span><button class="btn btn-outline" data-act="sync" style="min-height:44px"' + (S.syncing ? " disabled" : "") + ">" + (S.syncing ? "Reading…" : "Sync from Sheet") + "</button></div></section>" + backupPanel();
+    return h;
+  }
+
+  function captureAdd() {
+    S.addPoints = S.addPoints.map(function (p, i) {
+      var g = function (k) { var el = document.getElementById(k + i); return el ? el.value : (p[k] || ""); };
+      return { cue: g("c"), point: g("p"), also: g("x") };
+    });
+    ["f-title", "f-author", "f-book"].forEach(function (k) { var el = document.getElementById(k); if (el) S[k] = el.value; });
+    var w = document.querySelector('input[name="when"]:checked'); if (w) S.when = w.value;
+  }
+  function renderAdd() {
+    setTheme(null);
+    var isBook = S.addMode === "book", bs = booksSorted();
+    var h = '<header class="brandrow"><h1 class="page">Add</h1><div class="tabs2" role="tablist" aria-label="What to add"><button role="tab" data-act="mode" data-mode="book" aria-selected="' + isBook + '">New book</button><button role="tab" data-act="mode" data-mode="point" aria-selected="' + !isBook + '">Point to a book</button></div></header><form id="addform" class="list" style="gap:16px" autocomplete="off">';
+    if (isBook) h += '<div class="field"><label for="f-title">Title</label><input id="f-title" required value="' + esc(S["f-title"] || "") + '" placeholder="Book title"></div><div class="field"><label for="f-author">Author</label><input id="f-author" value="' + esc(S["f-author"] || "") + '" placeholder="Author"></div>';
+    else { var sel = S["f-book"] || S.addFor; h += '<div class="field"><label for="f-book">Book</label><select id="f-book">' + bs.map(function (b) { return '<option value="' + esc(b.id) + '"' + (sel === b.id ? " selected" : "") + ">Book " + bookNo(b) + ": " + esc(b.title) + "</option>"; }).join("") + "</select></div>"; }
+    var startN = isBook ? 0 : cardsOf(S["f-book"] || S.addFor || (bs[0] && bs[0].id)).length;
+    S.addPoints.forEach(function (p, i) {
+      h += '<section class="ptbox"><div class="brandrow"><div class="eyebrow muted" style="font-size:13px;font-weight:600">Point ' + (startN + i + 1) + '</div><div class="small muted">' + (i + 1) + " of " + S.addPoints.length + '</div></div>' +
+        '<div class="field"><label for="c' + i + '">Cue (front)</label><input id="c' + i + '" value="' + esc(p.cue || "") + '" placeholder="A question that makes you recall the idea"' + (isBook ? "" : " required") + "></div>" +
+        '<div class="field"><label for="p' + i + '">Point (back), one short paragraph</label><textarea id="p' + i + '" rows="4" placeholder="Claim, reasoning and example in 60 to 90 words"' + (isBook ? "" : " required") + ">" + esc(p.point || "") + "</textarea></div>" +
+        '<div class="field"><label for="x' + i + '">Also in (optional)</label><input id="x' + i + '" value="' + esc(p.also || "") + '" placeholder="Other books that make the same point"></div>' +
+        (i === S.addPoints.length - 1 ? '<button type="button" class="dashedbtn" data-act="morepoint">+ Add another point</button>' : "") + "</section>";
+    });
+    if (isBook) h += '<fieldset style="border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:4px"><legend class="lbl" style="padding:0 0 8px">When should it start?</legend><label class="radio"><input type="radio" name="when" value="end"' + (S.when !== "next" ? " checked" : "") + '>Add to the end of my queue</label><label class="radio"><input type="radio" name="when" value="next"' + (S.when === "next" ? " checked" : "") + ">Learn it next</label></fieldset>";
+    h += '<button class="btn btn-green" type="submit" style="min-height:52px;font-size:16px">' + (isBook ? "Save book" : (S.addPoints.length > 1 ? "Save points" : "Save point")) + "</button></form>";
+    return h;
+  }
+
+  function emptyState() {
+    return S.offline ? '<div class="empty"><h2>Your library could not load</h2><p class="muted">Bookly couldn\u2019t open its storage on this phone. Close the app fully and open it again. In a private browsing tab, open Bookly in a normal one instead.</p></div>'
+      : '<div class="empty"><h2>Loading your library</h2><p class="muted">Your books and points are on their way.</p></div>';
+  }
+  function render() {
+    document.querySelectorAll("nav.tabs button").forEach(function (b) { if (b.dataset.tab === S.tab) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
+    if (!S.ready) { setTheme(null); screen.innerHTML = emptyState(); return; }
+    if (document.getElementById("addform")) captureAdd();
+    var focusId = document.activeElement && document.activeElement.id === "q" ? "q" : null;
+    var h;
+    if (S.tab === "library" && S.openBook) h = renderBook(S.openBook);
+    else if (S.tab === "library") h = renderLibrary();
+    else if (S.tab === "progress") h = renderProgress();
+    else if (S.tab === "add") h = renderAdd();
+    else h = renderToday();
+    screen.innerHTML = h;
+    if (focusId) { var q = document.getElementById("q"); if (q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); } }
+    if (session) renderSession();
+  }
+
+  /* ---------- Review session ----------
+     One rule: if an introduced card is due, show it. If nothing is due, show the next new point.
+     A new point is shown once with its answer and no grading; its first test comes 2 minutes later.
+     mode "all": whole library. mode "book": one book. mode "list": a fixed list (warm-up, review a book). */
+  function startSession(mode, opts) {
+    session = Object.assign({ mode: mode, list: null, bookId: null, current: null, isNew: false, revealed: false, done: 0 }, opts || {});
+    if (!pickNext()) { session = null; toast("Nothing to review right now"); return; }
+    renderSession();
+  }
+  function pickNext() {
+    var now = Date.now(), id = null;
+    session.revealed = false; session.isNew = false;
+    if (session.mode === "list") {
+      while (session.list.length && !S.cards[session.list[0]]) session.list.shift();
+      id = session.list.shift() || null;
+    } else {
+      var due = dueQueue(now, session.bookId);
+      if (due.length) id = due[0].id;
+      else {
+        var fresh = session.bookId ? cardsOf(session.bookId).filter(function (c) { return !S.progress[c.id]; }) : newQueue();
+        if (fresh.length) id = fresh[0].id;
+      }
+    }
+    session.current = id;
+    session.isNew = !!id && !S.progress[id];
+    return !!id;
+  }
+  function closeSession() { session = null; clearTimeout(waitTimer); overlay.innerHTML = ""; render(); }
+  var waitTimer = null;
+  function renderSession() {
+    if (!session) return;
+    clearTimeout(waitTimer);
+    var now = Date.now(), dueN = dueQueue(now, session.bookId).length;
+    var top = '<header class="rvtop"><button class="iconbtn" data-act="end" aria-label="End session">' + ICON.close + '</button><div class="grow"></div><div class="small muted num" style="text-align:right">' +
+      (session.mode === "list" ? (session.list.length + (session.current ? 1 : 0)) + " left" : dueN ? dueN + " to review" : "Nothing due") + "</div></header>";
+    if (!session.current) {
+      var nd = nextDueAt(session.bookId);
+      overlay.innerHTML = '<div class="review"><div class="wrap">' + top + '<div class="done"><div class="eyebrow" style="color:var(--green-text)">All caught up</div><p class="cue">' + (session.done ? plural(session.done, "card") + " done." : "Nothing to review.") + "</p>" +
+        (isFinite(nd) ? '<p class="muted" style="margin:0">Next review ' + esc(whenLabel(nd, now)) + ".</p>" : "") + '<button class="btn btn-green" data-act="end">Back to today</button></div></div></div>';
+      if (isFinite(nd) && nd - now < 60 * MIN && session.mode !== "list") waitTimer = setTimeout(function () { if (session && !session.current && pickNext()) renderSession(); else renderSession(); }, Math.max(1000, nd - now + 500));
+      return;
+    }
+    var c = S.cards[session.current], b = S.books[c.bookId] || {}, p = S.progress[c.id];
+    var meta = '<div class="row" style="gap:8px;flex-wrap:wrap"><span class="pill">' + esc(b.title || "") + " · Point " + c.n + " of " + cardsOf(c.bookId).length + '</span><span class="kind ' + (session.isNew ? "new\">New point" : "rev\">Review") + "</span></div>";
+    var foot = '<div class="cardfoot"><span>' + esc(b.title || "") + (b.author ? " · " + esc(b.author) : "") + '</span><span style="display:flex;gap:4px"><button class="iconbtn" data-act="star" data-card="' + esc(c.id) + '" aria-pressed="' + !!c.starred + '" aria-label="' + (c.starred ? "Unstar" : "Star") + ' this point">' + ICON.star.replace("FILL", c.starred ? "currentColor" : "none") + '</button><button class="iconbtn" data-act="edit" data-card="' + esc(c.id) + '" aria-label="Edit this point">' + ICON.pen + "</button></span></div>";
+    var answer = '<section class="flash revealed" id="flash" tabindex="-1"><p class="cuesmall">' + esc(c.cue) + '</p><div class="divider"></div><p class="point">' + esc(c.point) + "</p>" + (c.also ? '<div class="also">Also in ' + esc(c.also) + "</div>" : "") + foot + "</section>";
+    var body;
+    if (session.isNew) {
+      body = answer + '<button class="btn-next" data-act="seen"><b>Next</b><span>you\'ll be asked about this ' + esc(whenLabel(now + LEARN_STEPS[0], now)) + "</span></button>";
+    } else if (!session.revealed) {
+      body = '<button class="flash prompt" data-act="reveal"><span class="eyebrow">Can you recall it?</span><span class="cue">' + esc(c.cue) + "</span></button>" +
+        '<button class="showbtn" data-act="reveal">Show the point</button>';
+    } else {
+      var f = schedule(p, 1, now, c.id), r = schedule(p, 3, now, c.id);
+      body = answer + '<div class="grades"><button class="grade forgot" data-act="grade" data-g="1"><b>Forgot</b><span>again ' + esc(whenLabel(f.due, now)) + '</span></button><button class="grade rem" data-act="grade" data-g="3"><b>Remembered</b><span>next ' + esc(whenLabel(r.due, now)) + "</span></button></div>";
+    }
+    overlay.innerHTML = '<div class="review"><div class="wrap">' + top + meta + body + "</div></div>";
+  }
+  function advance() { session.done++; pickNext(); renderSession(); }
+  function markSeen() {
+    if (!session || !session.isNew) return;
+    var id = session.current, rec = introduce(Date.now());
+    S.progress[id] = rec; save("progress/" + id, rec);
+    advance();
+  }
+  function grade(g) {
+    if (!session || !session.current || session.isNew) return;
+    var id = session.current, now = Date.now(), next = schedule(S.progress[id], g, now, id);
+    S.progress[id] = next; save("progress/" + id, next);
+    advance();
+  }
+
+  /* ---------- Persistence ---------- */
+  function save(path, data) {
+    if (!S.db) return Promise.resolve();
+    return S.db.doc(path).set(data).catch(function (e) {
+      if (e && e.code === "unavailable") return new Promise(function (r) { setTimeout(r, 600 + Math.random() * 800); }).then(function () { return S.db.doc(path).set(data); }).catch(failSave);
+      failSave(e);
+    });
+  }
+  function failSave(e) { var code = e && e.code; toast(code === "quota_exceeded" ? "Your phone is out of storage space." : "Could not save. Try again."); }
+  var toastTimer;
+  function toast(msg) {
+    var el = document.getElementById("toast");
+    if (!el) { el = document.createElement("div"); el.id = "toast"; el.className = "toast"; el.setAttribute("role", "status"); document.body.appendChild(el); }
+    el.textContent = msg; el.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(function () { el.hidden = true; }, 2600);
+  }
+  function reorder(bookId, where) {
+    var b = S.books[bookId]; if (!b) return;
+    var bs = booksSorted().filter(function (x) { return x.id !== bookId; }), order;
+    if (where === "end") order = bs.length ? bs[bs.length - 1].order + 1 : 1;
+    else {
+      var cb = currentBook(); if (cb && cb.id === bookId) return toast("This is already the book you're learning");
+      var after = cb ? bs.filter(function (x) { return x.order > cb.order; })[0] : null;
+      order = cb ? (after ? (cb.order + after.order) / 2 : cb.order + 1) : (bs.length ? bs[0].order - 1 : 1);
+    }
+    b.order = order; b.orderLocal = true; save("books/" + bookId, Object.assign({}, b));
+    toast(where === "end" ? "Moved to the end of your queue" : "This book comes next"); render();
+  }
+
+  function learnNow(id) {
+    var b = S.books[id]; if (!b) return;
+    var cs = cardsOf(id), fresh = cs.filter(function (c) { return !S.progress[c.id]; }), cb = currentBook();
+    if (fresh.length || !cs.length) {
+      if (!cb || cb.id !== id) {
+        var others = booksSorted().filter(function (x) { return x.id !== id; });
+        var ref = cb ? cb.order : (others.length ? others[0].order : 1);
+        var prev = others.filter(function (x) { return x.order < ref; }).pop();
+        b.order = prev ? (prev.order + ref) / 2 : ref - 1; b.orderLocal = true;
+        save("books/" + id, Object.assign({}, b));
+      }
+      S.search = ""; S.tab = "library"; S.openBook = id; render(); window.scrollTo(0, 0);
+      if (!cs.length) return toast("Moved to the front. Its cards start as soon as they're written.");
+      return startSession("book", { bookId: id });
+    }
+    S.search = ""; S.tab = "library"; S.openBook = id; render();
+    startSession("list", { list: cs.slice().sort(function (x, y) { return S.progress[x.id].due - S.progress[y.id].due; }).map(function (c) { return c.id; }) });
+  }
+
+  /* ---------- Sheets ---------- */
+  function sheet(html) { closeSheet(); var host = document.createElement("div"); host.className = "sheet-bg"; host.id = "sheet"; host.innerHTML = '<div class="sheet">' + html + "</div>"; document.body.appendChild(host); }
+  function closeSheet() { var s = document.getElementById("sheet"); if (s) s.remove(); }
+  function openEdit(id) {
+    var c = S.cards[id]; if (!c) return;
+    sheet('<form id="editform" data-card="' + esc(id) + '" style="display:flex;flex-direction:column;gap:12px"><div class="row"><b class="grow">Edit point ' + c.n + '</b><button type="button" class="iconbtn" data-act="closesheet" aria-label="Close">' + ICON.close + "</button></div>" +
+      '<div class="field"><label for="e-cue">Cue</label><input id="e-cue" required value="' + esc(c.cue) + '"></div><div class="field"><label for="e-point">Point</label><textarea id="e-point" required style="min-height:180px">' + esc(c.point) + '</textarea></div><div class="field"><label for="e-also">Also in</label><input id="e-also" value="' + esc(c.also || "") + '"></div><button class="btn btn-green" type="submit">Save changes</button></form>');
+    document.getElementById("e-point").focus();
+  }
+  /* ---------- Sync from Google Sheet (public read link) ---------- */
+  var SHEET_ID = "184d7Ct7ttcXYuN9w_sw7TshnArgNc3leu1PJYmCtrgg";
+  function parseCSV(text) {
+    var rows = [], row = [], f = "", q = false, i = 0, ch;
+    for (; i < text.length; i++) {
+      ch = text[i];
+      if (q) { if (ch === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += ch; }
+      else if (ch === '"') q = true;
+      else if (ch === ",") { row.push(f); f = ""; }
+      else if (ch === "\n" || ch === "\r") { if (ch === "\r" && text[i + 1] === "\n") i++; row.push(f); rows.push(row); row = []; f = ""; }
+      else f += ch;
+    }
+    if (f !== "" || row.length) { row.push(f); rows.push(row); }
+    return rows;
+  }
+  function readRange(tab, range) {
+    var url = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/gviz/tq?tqx=out:csv&headers=1&sheet=" + encodeURIComponent(tab) + "&range=" + range + "&t=" + Date.now();
+    return fetch(url, { cache: "no-store", credentials: "omit" }).then(function (r) {
+      if (!r.ok) throw { code: r.status === 404 ? "not_found" : "private" };
+      return r.text();
+    }, function () { throw { code: navigator.onLine === false ? "offline" : "private" }; }).then(function (t) {
+      if (/^\s*</.test(t)) throw { code: "private" };
+      return parseCSV(t);
+    });
+  }
+  function syncError(e) {
+    var c = e && e.code;
+    if (c === "offline") return "You're offline. Connect to the internet, then try again.";
+    if (c === "not_found") return "Couldn't find the Sheet. Check it still exists.";
+    if (c === "private") return "Bookly couldn't read your Sheet. In Google Sheets, tap Share, set General access to Anyone with the link (Viewer), then try again.";
+    return "Couldn't reach Google Sheets. Try again in a moment.";
+  }
+  function cell(r, i) { return String((r && r[i]) == null ? "" : r[i]).trim(); }
+  function computeSync(bookRows, cardRows) {
+    var ops = [], lines = [], sum = { booksNew: 0, booksChanged: 0, cardsNew: 0, cardsChanged: 0, cardsDropped: 0, skipped: 0 };
+    var byTitle = {}, touched = {};
+    bookRows.slice(1).forEach(function (r) {
+      var title = cell(r, 1); if (!title) return;
+      var id = slug(title), cur = S.books[id], ord = parseFloat(cell(r, 9));
+      byTitle[title.toLowerCase()] = id;
+      if (touched["books/" + id]) return; touched["books/" + id] = 1;
+      var next = { title: title, author: cell(r, 2), category: cell(r, 3), read: cell(r, 7) };
+      if (isFinite(ord) && !(cur && cur.orderLocal)) next.order = ord;
+      if (!cur) {
+        ops.push({ path: "books/" + id, data: Object.assign({ id: id, order: 9999, custom: false }, next) });
+        sum.booksNew++; lines.push("New book: " + title);
+      } else {
+        var ch = Object.keys(next).filter(function (k) { return String(cur[k] == null ? "" : cur[k]) !== String(next[k]); });
+        if (ch.length) { ops.push({ path: "books/" + id, data: Object.assign({}, cur, next) }); sum.booksChanged++; lines.push(title + ": " + ch.join(", ") + " changed"); }
+      }
+    });
+    cardRows.slice(1).forEach(function (r) {
+      var title = cell(r, 2), n = parseInt(cell(r, 3), 10); if (!title || !isFinite(n)) return;
+      var bid = byTitle[title.toLowerCase()] || slug(title), id = bid + "-" + String(n).padStart(2, "0"), cur = S.cards[id];
+      if (touched["cards/" + id]) return; touched["cards/" + id] = 1;
+      if (/^drop/i.test(cell(r, 7))) {
+        if (cur) { ops.push({ path: "cards/" + id, del: true }); if (S.progress[id]) ops.push({ path: "progress/" + id, del: true }); sum.cardsDropped++; lines.push("Remove: " + title + ", point " + n); }
+        return;
+      }
+      var cue = cell(r, 4), point = cell(r, 5), also = cell(r, 6);
+      if (!cue || !point) return;
+      if (!S.books[bid] && !touched["books/" + bid]) { sum.skipped++; return; }
+      if (!cur) { ops.push({ path: "cards/" + id, data: { id: id, bookId: bid, n: n, cue: cue, point: point, also: also, custom: false } }); sum.cardsNew++; lines.push("New card: " + title + ", point " + n); }
+      else if (cur.cue !== cue || cur.point !== point || (cur.also || "") !== also) { ops.push({ path: "cards/" + id, data: Object.assign({}, cur, { cue: cue, point: point, also: also }) }); sum.cardsChanged++; lines.push("Edited: " + title + ", point " + n); }
+    });
+    return { ops: ops, lines: lines, sum: sum };
+  }
+  function startSync() {
+    if (S.syncing) return;
+    if (!S.db) return toast("Your library is still loading.");
+    S.syncing = true; render();
+    Promise.all([readRange("Books", "A1:K1000"), readRange("Cards", "A1:I6000")]).then(function (v) {
+      S.syncing = false; render();
+      if (!v[0].length || !v[1].length) return sheet(syncSheetHtml(null, "The Sheet came back empty. Check the Books and Cards tabs are still there."));
+      S.syncPlan = computeSync(v[0], v[1]);
+      sheet(syncSheetHtml(S.syncPlan));
+    }).catch(function (e) {
+      S.syncing = false; render();
+      sheet(syncSheetHtml(null, syncError(e)));
+    });
+  }
+  function syncSheetHtml(plan, err) {
+    var head = '<div class="row"><b class="grow">Sync from Sheet</b><button class="iconbtn" data-act="closesheet" aria-label="Close">' + ICON.close + "</button></div>";
+    if (err) return head + '<p class="muted" style="margin:0">' + esc(err) + "</p>";
+    var s = plan.sum, total = s.booksNew + s.booksChanged + s.cardsNew + s.cardsChanged + s.cardsDropped;
+    if (!total) return head + '<p class="muted" style="margin:0">Everything already matches your Sheet.</p>' + (s.skipped ? '<p class="small muted" style="margin:0">' + plural(s.skipped, "card") + " skipped because its book title isn't on the Books tab.</p>" : "");
+    var parts = [];
+    if (s.cardsChanged) parts.push(plural(s.cardsChanged, "edited card"));
+    if (s.cardsNew) parts.push(plural(s.cardsNew, "new card"));
+    if (s.cardsDropped) parts.push(plural(s.cardsDropped, "card") + " to remove");
+    if (s.booksNew) parts.push(plural(s.booksNew, "new book"));
+    if (s.booksChanged) parts.push(plural(s.booksChanged, "book") + " updated");
+    return head + '<p style="margin:0">' + esc(parts.join(", ")) + ".</p>" +
+      '<div class="small muted" style="display:flex;flex-direction:column;gap:4px;max-height:220px;overflow:auto">' + plan.lines.slice(0, 40).map(function (l) { return "<div>" + esc(l) + "</div>"; }).join("") + (plan.lines.length > 40 ? "<div>and " + (plan.lines.length - 40) + " more</div>" : "") + "</div>" +
+      (s.skipped ? '<p class="small muted" style="margin:0">' + plural(s.skipped, "card") + " skipped because its book title isn't on the Books tab.</p>" : "") +
+      '<p class="small muted" style="margin:0">Your review progress stays as it is. Removed cards lose their progress.</p>' +
+      '<button class="btn btn-green" data-act="syncapply">Apply changes</button>';
+  }
+  function applySync() {
+    var plan = S.syncPlan; if (!plan || !S.db) return;
+    S.syncPlan = null; closeSheet(); toast("Syncing…");
+    var ops = plan.ops.slice(), fails = 0;
+    function worker() {
+      var op = ops.shift(); if (!op) return Promise.resolve();
+      var ref = S.db.doc(op.path), p = op.del ? ref.delete() : ref.set(op.data);
+      return p.catch(function (e) {
+        if (e && e.code === "unavailable") return new Promise(function (r) { setTimeout(r, 800); }).then(function () { return op.del ? ref.delete() : ref.set(op.data); });
+        throw e;
+      }).catch(function () { fails++; }).then(worker);
+    }
+    Promise.all([worker(), worker(), worker(), worker()]).then(function () {
+      var rec = { at: Date.now(), summary: plan.sum, failed: fails };
+      S.sync = rec; save("meta/sync", rec);
+      toast(fails ? plural(fails, "change") + " didn't save. Sync again to retry." : "Synced with your Sheet");
+      render();
+    });
+  }
+  function openComing() {
+    var list = booksSorted().filter(function (b) { return !cardsOf(b.id).length; });
+    sheet('<div class="row"><b class="grow">Waiting for cards</b><button class="iconbtn" data-act="closesheet" aria-label="Close">' + ICON.close + '</button></div><p class="small muted" style="margin:0">In learning order. Cards are added here as they are written.</p><div style="display:flex;flex-direction:column;gap:2px;max-height:60vh;overflow:auto">' +
+      list.map(function (b) { return '<button class="jrow" data-book="' + esc(b.id) + '"><span class="small muted num" style="min-width:30px">' + bookNo(b) + '</span><span class="grow" style="display:flex;flex-direction:column;min-width:0"><span style="font-family:var(--display);font-size:15px">' + esc(b.title) + '</span><span class="small muted">' + esc(b.author || "") + "</span></span></button>"; }).join("") + "</div>");
+  }
+  function openBookMenu(id) {
+    var b = S.books[id]; if (!b) return;
+    sheet('<div class="row"><b class="grow">' + esc(b.title) + '</b><button class="iconbtn" data-act="closesheet" aria-label="Close">' + ICON.close + '</button></div><button class="btn btn-outline" data-act="move" data-where="next" data-book="' + esc(id) + '">Learn this book next</button><button class="btn btn-outline" data-act="move" data-where="end" data-book="' + esc(id) + '">Move to the end of my queue</button>');
+  }
+
+  /* ---------- Events ---------- */
+  document.addEventListener("click", function (ev) {
+    var t = ev.target.closest("[data-tab],[data-act],[data-book]");
+    if (!t) { if (ev.target.id === "sheet") closeSheet(); return; }
+    if (t.dataset.tab) { S.tab = t.dataset.tab; S.openBook = null; render(); window.scrollTo(0, 0); return; }
+    var a = t.dataset.act;
+    if (!a && t.dataset.book) { closeSheet(); S.tab = "library"; S.openBook = t.dataset.book; render(); window.scrollTo(0, 0); return; }
+    if (a === "start") startSession("all");
+    else if (a === "seen") markSeen();
+    else if (a === "warmup") startSession("list", { list: [t.dataset.card] });
+    else if (a === "reviewbook") startSession("list", { list: cardsOf(t.dataset.book).filter(function (c) { return S.progress[c.id]; }).sort(function (x, y) { return S.progress[x.id].due - S.progress[y.id].due; }).map(function (c) { return c.id; }) });
+    else if (a === "learnnext") reorder(t.dataset.book, "next");
+    else if (a === "reveal") { session.revealed = true; renderSession(); var f = document.getElementById("flash"); if (f) f.focus(); }
+    else if (a === "grade") grade(Number(t.dataset.g));
+    else if (a === "end") closeSession();
+    else if (a === "star") { var c = S.cards[t.dataset.card]; c.starred = !c.starred; save("cards/" + c.id, Object.assign({}, c)); renderSession(); }
+    else if (a === "back") { S.openBook = null; render(); }
+    else if (a === "search") { S.search = S.search === null ? "" : null; render(); var q = document.getElementById("q"); if (q) q.focus(); }
+    else if (a === "filter") { S.libFilter = t.dataset.f; render(); }
+    else if (a === "mode") { captureAdd(); S.addMode = t.dataset.mode; render(); }
+    else if (a === "morepoint") { captureAdd(); S.addPoints.push({}); render(); var el = document.getElementById("c" + (S.addPoints.length - 1)); if (el) el.focus(); }
+    else if (a === "addpoint") { S.tab = "add"; S.addMode = "point"; S.addFor = t.dataset.book; S["f-book"] = t.dataset.book; S.addPoints = [{}]; S.openBook = null; render(); window.scrollTo(0, 0); }
+    else if (a === "bookmenu") openBookMenu(t.dataset.book);
+    else if (a === "move") { closeSheet(); reorder(t.dataset.book, t.dataset.where); }
+    else if (a === "edit") openEdit(t.dataset.card);
+    else if (a === "closesheet") closeSheet();
+    else if (a === "sync") startSync();
+    else if (a === "syncapply") applySync();
+    else if (a === "showcoming") openComing();
+    else if (a === "learnnow") learnNow(t.dataset.book);
+    else if (a === "addfromsearch") { S.tab = "add"; S.addMode = "book"; S["f-title"] = (S.search || "").trim(); S["f-author"] = ""; S.addPoints = [{}]; S.when = "next"; S.search = ""; render(); window.scrollTo(0, 0); var ft = document.getElementById("f-author"); if (ft) ft.focus(); }
+  });
+  document.addEventListener("input", function (ev) { if (ev.target.id === "q") { S.search = ev.target.value; render(); } });
+  document.addEventListener("change", function (ev) { if (ev.target.id === "f-book") { captureAdd(); render(); } });
+  document.addEventListener("keydown", function (ev) {
+    if (!session || document.getElementById("sheet")) return;
+    if (ev.target.matches && ev.target.matches("input, textarea, select")) return;
+    if (session.isNew && (ev.key === " " || ev.key === "Enter" || ev.key === "ArrowRight")) { ev.preventDefault(); markSeen(); }
+    else if (session.current && !session.isNew && !session.revealed && (ev.key === " " || ev.key === "Enter")) { ev.preventDefault(); session.revealed = true; renderSession(); }
+    else if (session.revealed && (ev.key === "1" || ev.key === "ArrowLeft")) grade(1);
+    else if (session.revealed && (ev.key === "2" || ev.key === "ArrowRight")) grade(3);
+    else if (ev.key === "Escape") closeSession();
+  });
+  document.addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var f = ev.target, val = function (id) { var el = document.getElementById(id); return el ? el.value.trim() : ""; };
+    if (f.id === "editform") {
+      var c = S.cards[f.dataset.card], cue = val("e-cue"), point = val("e-point"); if (!cue || !point) return;
+      Object.assign(c, { cue: cue, point: point, also: val("e-also") }); save("cards/" + c.id, Object.assign({}, c)).then(function () { toast("Point updated"); });
+      closeSheet(); render(); return;
+    }
+    if (f.id !== "addform") return;
+    captureAdd();
+    var pts = S.addPoints.map(function (p) { return { cue: (p.cue || "").trim(), point: (p.point || "").trim(), also: (p.also || "").trim() }; }).filter(function (p) { return p.cue && p.point; });
+    var bookId;
+    if (S.addMode === "book") {
+      var title = (S["f-title"] || "").trim(); if (!title) return;
+      bookId = slug(title); if (S.books[bookId]) bookId += "-" + Math.random().toString(36).slice(2, 6);
+      var bs = booksSorted(), order;
+      if (S.when === "next") { var cb = currentBook(), after = cb ? bs.filter(function (x) { return x.order > cb.order; })[0] : null; order = cb ? (after ? (cb.order + after.order) / 2 : cb.order + 1) : (bs.length ? bs[0].order - 1 : 1); }
+      else order = bs.length ? bs[bs.length - 1].order + 1 : 1;
+      var book = { id: bookId, title: title, author: (S["f-author"] || "").trim(), category: "", order: order, custom: true, addedAt: Date.now() };
+      S.books[bookId] = book; save("books/" + bookId, book);
+    } else { bookId = S["f-book"] || S.addFor; if (!bookId || !pts.length) return; }
+    var n = cardsOf(bookId).reduce(function (m, c) { return Math.max(m, c.n); }, 0);
+    pts.forEach(function (p) { n++; var cid = bookId + "-" + String(n).padStart(2, "0"); var card = { id: cid, bookId: bookId, n: n, cue: p.cue, point: p.point, also: p.also, custom: true }; S.cards[cid] = card; save("cards/" + cid, card); });
+    toast(S.addMode === "book" ? "Book added" : plural(pts.length, "point") + " added");
+    S.addPoints = [{}]; S["f-title"] = ""; S["f-author"] = ""; S.when = "end";
+    S.tab = "library"; S.openBook = bookId; render(); window.scrollTo(0, 0);
+  });
+
+  /* Keep "X to review" true to the minute while the app is open. */
+  function tick() {
+    if (!S.ready || document.hidden) return;
+    if (session) { if (session.current && session.mode !== "list") { var top = overlay.querySelector(".rvtop .num"), n = dueQueue(Date.now(), session.bookId).length; if (top) top.textContent = n ? n + " to review" : "Nothing due"; } return; }
+    if (S.tab === "today" && !document.getElementById("sheet")) render();
+  }
+  setInterval(tick, 15000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) tick(); });
+
+  /* ---------- Phone app extras: backup, install prompt, Android back button, offline cache ---------- */
+  var NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  var PLUG = (window.Capacitor && window.Capacitor.Plugins) || {};
+  var STANDALONE = NATIVE || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
+  var IOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  var installEvt = null, installHidden = false;
+  try { installHidden = localStorage.getItem("bookly-install-hidden") === "1"; } catch (e) {}
+  window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); installEvt = e; if (S.tab === "today") render(); });
+  window.addEventListener("appinstalled", function () { installEvt = null; installHidden = true; render(); });
+
+  function installBanner() {
+    if (STANDALONE || installHidden || (!IOS && !installEvt)) return "";
+    var how = IOS ? "In Safari, tap the Share button, then <b>Add to Home Screen</b>. Bookly then opens full screen and works offline." : "Install it to open Bookly from your home screen, full screen and offline.";
+    var apk = "", gh = location.hostname.match(/^([^.]+)\.github\.io$/), repo = location.pathname.split("/")[1];
+    if (/android/i.test(navigator.userAgent) && gh && repo) apk = '<a class="small" style="color:var(--soft);font-weight:600;text-align:center" href="https://github.com/' + gh[1] + "/" + repo + '/releases/latest/download/Bookly.apk">Or download the Android app (APK)</a>';
+    return '<section class="glass" style="gap:10px;padding:14px 16px"><div class="row" style="align-items:flex-start"><img src="icons/icon-192.png" alt="" width="40" height="40" style="border-radius:10px"><div class="grow small" style="color:var(--fg-warm)"><b style="font-size:15px">Put Bookly on your home screen</b><br>' + how + '</div><button class="iconbtn" data-act="hideinstall" aria-label="Hide">' + ICON.close + "</button></div>" +
+      (installEvt ? '<button class="btn-soft" data-act="install">Install Bookly</button>' : "") + apk + "</section>";
+  }
+  function backupPanel() {
+    return '<section class="panel"><div class="row" style="gap:12px;flex-wrap:wrap"><span class="grow" style="display:flex;flex-direction:column;gap:2px;min-width:160px"><span class="small" style="font-weight:600">Backup</span><span class="small muted" style="font-size:12px">Your progress lives on this phone. Save a copy now and then.</span></span>' +
+      '<span class="row" style="gap:8px"><button class="btn btn-outline" data-act="backup" style="min-height:44px">Save</button><button class="btn btn-outline" data-act="restore" style="min-height:44px">Restore</button></span></div></section>';
+  }
+  function backupData() { return { name: "bookly-backup-" + dayKey(Date.now()) + ".json", text: JSON.stringify({ app: "bookly", at: Date.now(), docs: S.db.dump() }) }; }
+  function saveBackup() {
+    if (!S.db) return;
+    var b = backupData();
+    if (NATIVE && PLUG.Filesystem && PLUG.Share) {
+      return PLUG.Filesystem.writeFile({ path: b.name, data: b.text, directory: "CACHE", encoding: "utf8" })
+        .then(function (r) { return PLUG.Share.share({ title: "Bookly backup", url: r.uri, dialogTitle: "Save your Bookly backup" }); })
+        .catch(function (e) { if (!/cancel/i.test(String(e && e.message))) toast("Couldn't save the backup."); });
+    }
+    var file = null; try { file = new File([b.text], b.name, { type: "application/json" }); } catch (e) {}
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) return navigator.share({ files: [file], title: "Bookly backup" }).catch(function () {});
+    var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([b.text], { type: "application/json" })); a.download = b.name;
+    document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+    toast("Backup saved to your downloads");
+  }
+  function pickRestore() {
+    var i = document.createElement("input"); i.type = "file"; i.accept = "application/json,.json";
+    i.onchange = function () {
+      var f = i.files && i.files[0]; if (!f) return;
+      f.text().then(function (t) {
+        var j = JSON.parse(t); if (!j || j.app !== "bookly" || !j.docs) throw 0;
+        if (!confirm("Replace everything in Bookly with this backup from " + new Date(j.at).toLocaleDateString("en-GB") + "?")) return;
+        return S.db.restore(j.docs).then(function () { toast("Backup restored"); });
+      }).catch(function () { toast("That file isn't a Bookly backup"); });
+    };
+    i.click();
+  }
+  document.addEventListener("click", function (ev) {
+    var t = ev.target.closest("[data-act]"); if (!t) return;
+    var a = t.dataset.act;
+    if (a === "backup") saveBackup();
+    else if (a === "restore") pickRestore();
+    else if (a === "install" && installEvt) { installEvt.prompt(); installEvt.userChoice.then(function () { installEvt = null; render(); }); }
+    else if (a === "hideinstall") { installHidden = true; try { localStorage.setItem("bookly-install-hidden", "1"); } catch (e) {} render(); }
+  });
+  if (NATIVE && PLUG.App) {
+    PLUG.App.addListener("backButton", function () {
+      if (document.getElementById("sheet")) return closeSheet();
+      if (session) return closeSession();
+      if (S.openBook) { S.openBook = null; return render(); }
+      if (S.tab !== "today") { S.tab = "today"; render(); return window.scrollTo(0, 0); }
+      PLUG.App.exitApp();
+    });
+  }
+  if (!NATIVE && "serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+    window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+  }
+
+  /* ---------- Boot ---------- */
+  render();
+  function loaded(k) { S.loaded[k] = true; if (S.loaded.books && S.loaded.cards && S.loaded.progress) S.ready = true; render(); }
+  function sub(col) {
+    S.db.collection(col).onSnapshot(function (snap) {
+      var m = {}; snap.docs.forEach(function (d) { var v = Object.assign({}, d.data()); if (!v.id) v.id = d.id; m[d.id] = v; });
+      S[col] = m; loaded(col);
+    }, function () { S.offline = true; render(); });
+  }
+  var use = window.BooklyDB;
+  Promise.resolve(use).then(function (db) {
+    if (!db) { S.offline = true; render(); return; }
+    S.db = db; sub("books"); sub("cards"); sub("progress");
+    db.doc("meta/sync").onSnapshot(function (d) { if (d.exists) S.sync = Object.assign({}, d.data()); if (S.ready && S.tab === "progress") render(); });
+  }).catch(function () { S.offline = true; render(); });
+})();
+</script>
+</body>
+</html>
